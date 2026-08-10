@@ -8,4 +8,4 @@
 
 - Record decisions you make while planning or implementing and tell the user about it. If you make a silent decision that causes issues down the track, the fault can be assigned to you, so avoid this and always tell a user about your decisions.
 
-- Avoid default configs. Prefer explicit params.
+- Avoid default configs in favour of explicit configs.
