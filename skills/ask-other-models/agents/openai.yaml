@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ask Other Models"
+  short_description: "Get independent opinions from every other model family on this host"
+  default_prompt: "Use $ask-other-models to get the other installed models' opinions on this question."

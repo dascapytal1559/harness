@@ -1,0 +1,4 @@
+interface:
+  display_name: "Flywheel Conductor"
+  short_description: "Guide projects through Flywheel gates"
+  default_prompt: "Use $flywheel-conductor to inspect this project and tell me the single best next step."
