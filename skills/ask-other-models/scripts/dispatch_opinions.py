@@ -17,6 +17,22 @@ from pathlib import Path
 
 
 PROVIDERS = ("codex", "claude", "grok")
+CANONICAL_EFFORTS = ("none", "minimal", "low", "medium", "high", "xhigh", "max")
+PROVIDER_EFFORTS = {
+    "claude": ("low", "medium", "high", "xhigh", "max"),
+    "codex": ("minimal", "low", "medium", "high", "xhigh"),
+    "grok": CANONICAL_EFFORTS,
+}
+
+
+@dataclass(frozen=True)
+class EffortMapping:
+    requested: str
+    applied: str
+
+    @property
+    def clamped(self) -> bool:
+        return self.applied != self.requested
 
 
 @dataclass(frozen=True)
@@ -24,6 +40,7 @@ class Result:
     provider: str
     status: str
     model_policy: str
+    effort: EffortMapping
     cli_version: str | None
     output: str | None
     error: str | None
@@ -40,6 +57,15 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Provider family of the active session. That family is excluded from the panel; "
             "use 'other' for a host family outside the supported provider list."
+        ),
+    )
+    parser.add_argument(
+        "--session-effort",
+        required=True,
+        choices=CANONICAL_EFFORTS,
+        help=(
+            "Reasoning effort of the active session on the canonical scale "
+            f"{', '.join(CANONICAL_EFFORTS)}. Mapped to each provider's nearest supported tier."
         ),
     )
     parser.add_argument(
@@ -76,6 +102,23 @@ def parse_models(values: list[str], selected: tuple[str, ...]) -> dict[str, str]
     return models
 
 
+def map_effort(provider: str, requested: str) -> EffortMapping:
+    if requested not in CANONICAL_EFFORTS:
+        raise ValueError(f"invalid session effort {requested!r}")
+    if provider not in PROVIDER_EFFORTS:
+        raise ValueError(f"unknown provider {provider!r}")
+    supported = PROVIDER_EFFORTS[provider]
+    if requested in supported:
+        return EffortMapping(requested, requested)
+    requested_index = CANONICAL_EFFORTS.index(requested)
+
+    def closeness(level: str) -> tuple[int, int]:
+        level_index = CANONICAL_EFFORTS.index(level)
+        return (abs(level_index - requested_index), -level_index)
+
+    return EffortMapping(requested, min(supported, key=closeness))
+
+
 def prompt_for(question: str) -> str:
     return f"""You are one voice in an independent multi-model opinion panel.
 
@@ -104,11 +147,18 @@ def cli_version(executable: str) -> str | None:
     return text.splitlines()[0] if text else None
 
 
-def command_for(provider: str, model: str | None, prompt_file: Path, result_file: Path) -> list[str]:
+def command_for(
+    provider: str,
+    model: str | None,
+    effort: str,
+    prompt_file: Path,
+    result_file: Path,
+) -> list[str]:
     if provider == "claude":
         command = [
             "claude", "--print", "--no-session-persistence", "--permission-mode", "plan",
             "--tools", "", "--output-format", "text",
+            "--effort", effort,
         ]
         if model:
             command.extend(["--model", model])
@@ -117,6 +167,7 @@ def command_for(provider: str, model: str | None, prompt_file: Path, result_file
         command = [
             "codex", "exec", "--skip-git-repo-check", "--sandbox", "read-only",
             "--ephemeral", "--color", "never", "--output-last-message", str(result_file),
+            "-c", f"model_reasoning_effort={effort}",
         ]
         if model:
             command.extend(["--model", model])
@@ -125,17 +176,25 @@ def command_for(provider: str, model: str | None, prompt_file: Path, result_file
     command = [
         "grok", "--prompt-file", str(prompt_file), "--permission-mode", "plan",
         "--tools", "", "--no-memory", "--no-subagents", "--output-format", "plain",
+        "--reasoning-effort", effort,
     ]
     if model:
         command.extend(["--model", model])
     return command
 
 
-def run_provider(provider: str, question: str, model: str | None, timeout_seconds: int) -> Result:
+def run_provider(
+    provider: str,
+    question: str,
+    model: str | None,
+    session_effort: str,
+    timeout_seconds: int,
+) -> Result:
     executable = shutil.which(provider)
     model_policy = model or "host-configured"
+    effort = map_effort(provider, session_effort)
     if executable is None:
-        return Result(provider, "unavailable", model_policy, None, None, "CLI not found")
+        return Result(provider, "unavailable", model_policy, effort, None, None, "CLI not found")
 
     version = cli_version(executable)
     prompt = prompt_for(question)
@@ -144,7 +203,7 @@ def run_provider(provider: str, question: str, model: str | None, timeout_second
         prompt_file = temp_dir / "prompt.md"
         result_file = temp_dir / "result.md"
         prompt_file.write_text(prompt, encoding="utf-8")
-        command = command_for(provider, model, prompt_file, result_file)
+        command = command_for(provider, model, effort.applied, prompt_file, result_file)
         try:
             completed = subprocess.run(
                 command,
@@ -156,16 +215,22 @@ def run_provider(provider: str, question: str, model: str | None, timeout_second
                 timeout=timeout_seconds,
             )
         except subprocess.TimeoutExpired:
-            return Result(provider, "failed", model_policy, version, None, "timed out")
+            return Result(provider, "failed", model_policy, effort, version, None, "timed out")
         except OSError as error:
-            return Result(provider, "failed", model_policy, version, None, str(error))
+            return Result(provider, "failed", model_policy, effort, version, None, str(error))
 
         output = result_file.read_text(encoding="utf-8") if result_file.exists() else completed.stdout
         output = output.strip()
         if completed.returncode != 0 or not output:
             detail = completed.stderr.strip() or f"exited {completed.returncode} without output"
-            return Result(provider, "failed", model_policy, version, None, detail[-2000:])
-        return Result(provider, "succeeded", model_policy, version, output, None)
+            return Result(provider, "failed", model_policy, effort, version, None, detail[-2000:])
+        return Result(provider, "succeeded", model_policy, effort, version, output, None)
+
+
+def effort_label(mapping: EffortMapping) -> str:
+    if mapping.clamped:
+        return f"{mapping.applied} (clamped from {mapping.requested})"
+    return mapping.applied
 
 
 def main() -> int:
@@ -201,7 +266,12 @@ def main() -> int:
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(selected)) as executor:
         futures = {
             provider: executor.submit(
-                run_provider, provider, question, models.get(provider), args.timeout_seconds
+                run_provider,
+                provider,
+                question,
+                models.get(provider),
+                args.session_effort,
+                args.timeout_seconds,
             )
             for provider in selected
         }
@@ -214,23 +284,29 @@ def main() -> int:
             f"# {result.provider.title()} independent opinion\n\n"
             f"- CLI version: {result.cli_version or 'unknown'}\n"
             f"- Model policy: {result.model_policy}\n"
+            f"- Session effort: {result.effort.requested}\n"
+            f"- Applied effort: {effort_label(result.effort)}\n"
             f"- Question SHA-256: `{question_hash}`\n"
             f"- Generated: {generated_at}\n\n"
         )
         (args.out_dir / f"{result.provider}.md").write_text(header + result.output + "\n", encoding="utf-8")
 
     manifest = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "generatedAt": generated_at,
         "question": str(args.question.resolve()),
         "questionSha256": question_hash,
         "sessionProvider": args.session_provider,
+        "sessionEffort": args.session_effort,
         "panelProviders": list(selected),
         "results": [
             {
                 "provider": result.provider,
                 "status": result.status,
                 "modelPolicy": result.model_policy,
+                "effortRequested": result.effort.requested,
+                "effortApplied": result.effort.applied,
+                "effortClamped": result.effort.clamped,
                 "cliVersion": result.cli_version,
                 "error": result.error,
             }

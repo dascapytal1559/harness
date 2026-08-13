@@ -34,18 +34,21 @@ Before dispatching, write down your own complete answer to the packet — in the
 
 Inspect `command -v claude`, `command -v codex`, and `command -v grok`, then capture each `--version`. Do not install, authenticate, update, or switch provider accounts implicitly.
 
-Identify the active session's provider family explicitly. A missing CLI is skipped and reported, not treated as an error. Before dispatch, tell the user which providers will run, the host-model policy or any pinned models, where outputs land, and possible quota or metered-cost implications.
+Identify the active session's provider family and reasoning effort explicitly. Resolve effort from the session's own recorded level when you can see it: Grok `summary.json` `reasoning_effort`, Claude `--effort` / `/effort` / `effortLevel`, Codex a mid-session override or else `model_reasoning_effort` in `~/.codex/config.toml`. Map aliases such as `auto` to the concrete tier they currently resolve to. If you cannot see the level, ask the user — do not invent a higher tier. A missing CLI is skipped and reported, not treated as an error. Before dispatch, tell the user which providers will run, the session effort and any provider clamps, the host-model policy or any pinned models, where outputs land, and possible quota or metered-cost implications.
 
 ## Dispatch
 
-Run the bundled adapter from this skill directory. For a Claude session:
+Run the bundled adapter from this skill directory. For a Claude session at high effort:
 
 ```sh
 python3 scripts/dispatch_opinions.py \
   --session-provider claude \
+  --session-effort high \
   --question <dir>/question.md \
   --out-dir <dir>/opinions
 ```
+
+`--session-effort` is required (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`). The adapter maps that canonical level onto each provider's nearest supported tier — ties go higher — and records requested vs applied effort in `opinion-run.json`. Do not pass provider-native effort flags yourself.
 
 By default the adapter targets every supported provider except the session provider; it rejects an attempt to present the session's own family as an independent voice. Use `--provider` only to narrow the set, `--session-provider other` for a host family outside the supported list, and `--model provider=model-id` only when a model is pinned — otherwise the explicit policy is `host-configured`: keep the authenticated CLI's configured model and record that policy in `opinion-run.json`.
 
@@ -57,7 +60,7 @@ The adapter uses isolated temporary working directories, disables tools where su
 
 Do not vote, average, or blend the answers into one anonymous consensus. Present:
 
-1. **Per-model opinions** — a faithful summary of each provider's position with its name and recorded model policy, including the active session's own pre-dispatch opinion as an equal entry.
+1. **Per-model opinions** — a faithful summary of each provider's position with its name, recorded model policy, and applied effort (note a clamp if one happened), including the active session's own pre-dispatch opinion as an equal entry.
 2. **Agreements and disagreements** — where the panel converges, where it splits, and what each split actually hinges on (fact, taste, or risk appetite).
 3. **Your synthesis** — clearly labelled as the session's view after reading the others: your recommendation, what changed your mind if anything, and which disagreements only the user can settle.
 
