@@ -1,5 +1,7 @@
 # Agent Instructions
 
+- Only human writes this file. You can suggest.
+
 - Engineering exellence and correctness, matter a lot. Let the user know if you see a mistake, or an opportunity for elegant refactor, even if not in your scope.
 
 - Elegance often trump backward compatibility. If you see an opportunity, point it out.
