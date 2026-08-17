@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Symlink the Flywheel skills in this directory into Claude, Codex, and Grok.
+# Symlink the skills in this directory into Claude, Codex, and Grok.
 # Idempotent: re-running just refreshes the links. A pre-existing real directory
 # (not a symlink) is moved aside to "<name>.bak.<pid>" rather than deleted.
 set -euo pipefail

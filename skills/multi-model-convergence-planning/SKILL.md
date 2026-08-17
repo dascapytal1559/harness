@@ -5,16 +5,15 @@ description: >
   alternative providers, synthesize, resolve a human decision docket, and refine until material
   changes converge. Use when the user asks to plan a project or feature with Claude, Codex, and
   Grok, run a planning panel, converge competing plans, create a planning packet or decision
-  docket, or runs /multi-model-convergence-planning. Also use when the Flywheel Conductor is in
-  the Foundation, Plan, or Plan-refinement gate. Do not use for isolated coding or for same-family
-  subagent brainstorming presented as triangulation.
+  docket, or runs /multi-model-convergence-planning. Do not use for isolated coding or for
+  same-family subagent brainstorming presented as triangulation.
 ---
 
 # Multi-model convergence planning
 
 Produce one implementable canonical plan by challenging a session-primary draft with independent proposals from other model families. This skill owns packet construction, primary-plan preservation, isolated alternative dispatch, synthesis, the decision docket, rebuttal, and the convergence audit.
 
-If the Flywheel Conductor invoked this skill, remain the planning method only: do not take over gate selection, Beads translation, or product-source implementation. If invoked directly, do not write product source code.
+Do not write product source code.
 
 ## Durable layout
 
@@ -99,7 +98,7 @@ Every role must still return a complete standalone plan. Roles bias attention; t
 
 ## Adapt the upstream primary-planner role
 
-The upstream guide currently uses GPT-5.6 Sol Pro in the ChatGPT Pro web app for the initial plan and final synthesis. This skill preserves the single-primary-planner structure but assigns it to the active session for a lower-friction desktop workflow. Record this standing substitution in the `flywheel-conductor` skill's [upstream integrity](../flywheel-conductor/references/UPSTREAM_INTEGRITY.md) ledger rather than repeating an availability disclaimer in every synthesis.
+The upstream guide currently uses GPT-5.6 Sol Pro in the ChatGPT Pro web app for the initial plan and final synthesis. This skill preserves the single-primary-planner structure but assigns it to the active session for a lower-friction desktop workflow; do not repeat an availability disclaimer in every synthesis.
 
 ## Synthesize selectively
 
