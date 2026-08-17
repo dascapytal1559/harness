@@ -1,0 +1,3 @@
+interface:
+  display_name: "Grilling"
+  short_description: "Grill the user about a plan, decision, or idea"
