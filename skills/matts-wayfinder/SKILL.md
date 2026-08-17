@@ -22,7 +22,7 @@ The map is a single issue on this repo's issue tracker, labelled `wayfinder:map`
 
 The map is an **index**, not a store. It lists the decisions made and points at the tickets that hold their detail; a decision lives in exactly one place — its ticket — so the map never restates it, only gists it and links.
 
-**Where the map, its child tickets, blocking, and frontier queries physically live is tracker-specific.** The issue tracker should have been provided to you. If not, tell the user to run `/matts-setup`. Consult the tracker doc's "Wayfinding operations" section for how _this_ repo expresses them. If no tracker has been provided, default to the local-markdown tracker.
+**Where the map, its child tickets, blocking, and frontier queries physically live is tracker-specific.** Read `docs/agents/issue-tracker.md` and follow its "Wayfinding operations" section. If that file is missing, default to local markdown: map at `.scratch/<effort>/map.md`; child tickets at `.scratch/<effort>/issues/NN-<slug>.md` with `Type:`, `Status:`, and `Blocked by:` lines; claim by setting `Status: claimed`; resolve by appending `## Answer` and setting `Status: resolved`.
 
 ### The map body
 
