@@ -10,7 +10,7 @@ Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
 
 Both axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
 
-If `docs/agents/issue-tracker.md` is present, use it to fetch issues. If it is missing, skip tracker fetch and continue with the other spec sources.
+The issue tracker should have been provided to you. If `docs/agents/issue-tracker.md` is missing, tell the user to run `/matts-setup`.
 
 ## Process
 
