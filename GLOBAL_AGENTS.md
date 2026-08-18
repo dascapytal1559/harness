@@ -1,6 +1,6 @@
 # Agent Instructions
 
-Only human writes this file. Agents can only suggest.
+Only human can edit GLOBAL_AGENTS.md, agents can only suggest.
 
 ## Coding & planning
 - Engineering exellence and correctness, matter a lot. Let the user know if you see a mistake, or an opportunity for elegant refactor, even if not in your scope.
