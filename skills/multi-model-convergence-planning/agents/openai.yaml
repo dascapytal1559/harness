@@ -1,4 +1,4 @@
 interface:
-  display_name: "Multi-Model Convergence Planning"
+  display_name: "Multi Model Convergence Planning"
   short_description: "Converge independent Claude, Codex, and Grok plans"
   default_prompt: "Use $multi-model-convergence-planning to run an independent planning panel on this project."

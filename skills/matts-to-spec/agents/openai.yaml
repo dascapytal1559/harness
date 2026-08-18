@@ -1,5 +1,5 @@
 interface:
-  display_name: "To Spec"
+  display_name: "Matts To Spec"
   short_description: "Turn a conversation into a spec"
 policy:
   allow_implicit_invocation: false
