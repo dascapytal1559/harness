@@ -1,5 +1,7 @@
 Only human can edit GLOBAL_AGENTS.md, agents can only suggest.
 
+**Communicate in plain language by default.** This applies to everything you write — answers, plans, summaries, and text inside structured formats.
+
 ## Coding & planning
 - Communicate in plain language
 - Engineering exellence and correctness, matter a lot. Let the user know if you see a mistake, or an opportunity for elegant refactor, even if not in your scope.
