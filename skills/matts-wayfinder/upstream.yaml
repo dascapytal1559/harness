@@ -1,0 +1,9 @@
+# git diff <pin>..HEAD -- <path> against repo. Replay deltas. Advance pin after.
+repo: https://github.com/mattpocock/skills
+path: skills/engineering/wayfinder
+pin: 321658273cb1d20b76026717d027d505790106d4
+checked: 2026-09-04
+deltas:
+  - renamed to matts-wayfinder
+  - Skill-tool calls retargeted to matts-* names
+  - no /matts-setup: local-markdown fallback if issue-tracker.md is missing

@@ -1,0 +1,8 @@
+# git diff <pin>..HEAD -- <path> against repo. Replay deltas. Advance pin after.
+repo: https://github.com/mattpocock/skills
+path: skills/engineering/code-review
+pin: 5c89081d4bbeb3d039a42093653f90bb698d780e
+checked: 2026-09-04
+deltas:
+  - renamed to matts-code-review
+  - no /matts-setup: skip tracker fetch if issue-tracker.md is missing
