@@ -1,0 +1,7 @@
+# git diff <pin>..HEAD -- <path> against repo. Replay deltas. Advance pin after.
+repo: https://github.com/humanlayer/skills
+path: plugins/show-me/skills/show-me
+pin: 3c2629142c5d437428269b1b722b08c0b87f574d
+checked: 2026-09-07
+deltas:
+  - added agents/openai.yaml for Codex display metadata

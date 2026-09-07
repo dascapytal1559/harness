@@ -1,0 +1,7 @@
+# git diff <pin>..HEAD -- <path> against repo. Replay deltas. Advance pin after.
+repo: https://github.com/openclaw/agent-skills
+path: skills/autoreview
+pin: 3f392d7531673127ebfa9ed87148e64c26c8153f
+checked: 2026-09-04
+deltas:
+  - Codex adapter display_name "Auto Review"

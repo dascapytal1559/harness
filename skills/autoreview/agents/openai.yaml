@@ -1,0 +1,3 @@
+interface:
+  display_name: "Auto Review"
+  short_description: "Independent structured code review via Codex or Claude"
