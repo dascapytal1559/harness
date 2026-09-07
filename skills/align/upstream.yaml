@@ -1,0 +1,9 @@
+# git diff <pin>..HEAD -- <path> against repo. Replay deltas. Advance pin after.
+repo: https://github.com/mattpocock/skills
+path: skills/productivity/grilling
+pin: 85f83d3fde1d3a90d5c9a657f6998c79a6c37308
+checked: 2026-09-04
+deltas:
+  - renamed to align (via matts-grilling)
+  - Codex display_name "Align"
+  - questions vs assumptions split (harness dbba2c9)
