@@ -114,3 +114,27 @@ Deliver in chat:
 3. what changed between round 1 and the final answer, and what the judge originated.
 
 Keep every per-round provider file so the user can read any voice in full.
+
+## Feedback
+
+Every council ends by posting feedback about this skill, not about the subject, as one new file in `feedbacks/` inside this skill's directory. Post it even when the council aborted, ran short of quorum, or hit the cap without converging; an aborted council is the most useful feedback. Name it `<YYYY-MM-DD>-<host>-<slug>.md`, host being claude, codex, or grok, slug being the council's record directory name. Never edit SKILL.md, the scripts, or another run's feedback; refinement happens later, by a human reading these.
+
+```
+# <date> <host>, <slug>: <one-line title>
+
+Subject: <one line>. Record: docs/council/<slug>/.
+Voices: <providers that answered, with any clamps or failures>. Judge: <host and model>.
+Rounds: <N run>, status per round: <e.g. major-change, near-convergence, converged>.
+Docket: <number of stuck items escalated>. Outcome: <one line>.
+
+## What worked
+- <what the procedure got right>
+
+## 1. <the issue, one line>
+<what happened and what it cost. Quote the SKILL.md line if it caused it.>
+Suggest: <the smallest change to SKILL.md or the scripts that removes it>
+
+## 2. ...
+```
+
+As many numbered issues as the run produced, each with its own suggestion. Paths from the record are fine; the packet's contents and the voices' answers are not.
