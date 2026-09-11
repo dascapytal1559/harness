@@ -1,0 +1,6 @@
+# git diff <pin>..HEAD -- <path> against repo. Replay deltas. Advance pin after.
+repo: https://github.com/kunchenguid/no-mistakes
+path: skills/no-mistakes
+pin: 9fcc8657e1cf3b53cc6457d7e78092c2bf506929  # tag v1.72.0
+checked: 2026-09-11
+deltas: []
