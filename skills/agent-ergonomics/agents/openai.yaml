@@ -1,0 +1,3 @@
+interface:
+  display_name: "Agent Ergonomics"
+  short_description: "Probe a system cold and rewrite its docs as one tower"
