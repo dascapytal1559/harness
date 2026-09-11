@@ -64,7 +64,7 @@ python3 scripts/dispatch_council.py \
   --out-dir docs/council/<slug>
 ```
 
-`--effort` is required and is mapped to each provider's nearest supported tier, ties going higher; requested and applied effort are recorded in `council-run.json`. `--judge` is provenance only and excludes nobody. Use `--provider` only to narrow the set, and `--model provider=model-id` only when a model is pinned; otherwise the policy is `host-configured`. Do not pass provider-native effort flags yourself.
+`--effort` is required and is mapped to each provider's nearest supported tier, ties going higher; requested and applied effort are recorded in `council-run.json`. `--judge` is provenance only and excludes nobody. Use `--provider` only to narrow the set. The Claude voice is pinned to the Opus family by skill default (`--model claude=opus`, resolved by the CLI to the latest Opus) so it does not follow whatever model the host session runs; Codex and Grok use the host-configured model. Use `--model provider=model-id` to override either. The model policy and its source (`pinned`, `skill-default`, `host-configured`) are recorded in `council-run.json`. Do not pass provider-native effort flags yourself.
 
 Every voice gets the identical neutral prompt. No roles or lenses are assigned; diversity comes from the model families.
 

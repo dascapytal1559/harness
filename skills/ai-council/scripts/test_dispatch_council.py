@@ -6,7 +6,7 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from dispatch_council import command_for, map_effort, prompt_for
+from dispatch_council import choose_model, command_for, map_effort, prompt_for
 
 
 class MapEffortTests(unittest.TestCase):
@@ -69,6 +69,24 @@ class PromptForTests(unittest.TestCase):
     def test_round_must_be_positive(self) -> None:
         with self.assertRaises(ValueError):
             prompt_for("PACKET", "abc", 0, None)
+
+
+class ChooseModelTests(unittest.TestCase):
+    def test_claude_defaults_to_opus_family(self) -> None:
+        choice = choose_model("claude", None)
+        self.assertEqual(choice.policy, "opus")
+        self.assertEqual(choice.source, "skill-default")
+
+    def test_other_providers_are_host_configured(self) -> None:
+        for provider in ("codex", "grok"):
+            choice = choose_model(provider, None)
+            self.assertEqual(choice.policy, "host-configured")
+            self.assertEqual(choice.source, "host-configured")
+
+    def test_pin_overrides_default(self) -> None:
+        choice = choose_model("claude", "claude-opus-5")
+        self.assertEqual(choice.policy, "claude-opus-5")
+        self.assertEqual(choice.source, "pinned")
 
 
 class CommandForTests(unittest.TestCase):

@@ -30,6 +30,9 @@ PROVIDER_EFFORTS = {
     "grok": CANONICAL_EFFORTS,
 }
 MIN_QUORUM = 2
+# Family aliases the CLIs resolve to their latest model. Claude is pinned to the Opus
+# family so the council voice does not follow whatever the host session happens to run.
+DEFAULT_MODELS = {"claude": "opus"}
 
 
 @dataclass(frozen=True)
@@ -43,10 +46,16 @@ class EffortMapping:
 
 
 @dataclass(frozen=True)
+class ModelChoice:
+    policy: str
+    source: str  # "pinned" (--model), "skill-default", or "host-configured"
+
+
+@dataclass(frozen=True)
 class Result:
     provider: str
     status: str
-    model_policy: str
+    model: ModelChoice
     effort: EffortMapping
     cli_version: str | None
     output: str | None
@@ -89,7 +98,11 @@ def parse_args() -> argparse.Namespace:
         action="append",
         default=[],
         metavar="PROVIDER=MODEL",
-        help="Pin a provider model; otherwise record and use the host-configured model.",
+        help=(
+            "Pin a provider model, overriding the skill default. Skill defaults: "
+            + ", ".join(f"{k}={v}" for k, v in DEFAULT_MODELS.items())
+            + ". Providers without a default use the host-configured model."
+        ),
     )
     parser.add_argument("--timeout-seconds", type=int, default=900)
     return parser.parse_args()
@@ -124,6 +137,14 @@ def map_effort(provider: str, requested: str) -> EffortMapping:
         return (abs(level_index - requested_index), -level_index)
 
     return EffortMapping(requested, min(supported, key=closeness))
+
+
+def choose_model(provider: str, pinned: str | None) -> ModelChoice:
+    if pinned:
+        return ModelChoice(pinned, "pinned")
+    if provider in DEFAULT_MODELS:
+        return ModelChoice(DEFAULT_MODELS[provider], "skill-default")
+    return ModelChoice("host-configured", "host-configured")
 
 
 def prompt_for(packet: str, packet_hash: str, round_number: int, brief: str | None) -> str:
@@ -215,15 +236,16 @@ def command_for(
 def run_provider(
     provider: str,
     prompt: str,
-    model: str | None,
+    pinned_model: str | None,
     effort_level: str,
     timeout_seconds: int,
 ) -> Result:
     executable = shutil.which(provider)
-    model_policy = model or "host-configured"
+    choice = choose_model(provider, pinned_model)
+    model = None if choice.source == "host-configured" else choice.policy
     effort = map_effort(provider, effort_level)
     if executable is None:
-        return Result(provider, "unavailable", model_policy, effort, None, None, "CLI not found")
+        return Result(provider, "unavailable", choice, effort, None, None, "CLI not found")
 
     version = cli_version(executable)
     with tempfile.TemporaryDirectory(prefix=f"ai-council-{provider}-") as temp_name:
@@ -243,16 +265,16 @@ def run_provider(
                 timeout=timeout_seconds,
             )
         except subprocess.TimeoutExpired:
-            return Result(provider, "failed", model_policy, effort, version, None, "timed out")
+            return Result(provider, "failed", choice, effort, version, None, "timed out")
         except OSError as error:
-            return Result(provider, "failed", model_policy, effort, version, None, str(error))
+            return Result(provider, "failed", choice, effort, version, None, str(error))
 
         output = result_file.read_text(encoding="utf-8") if result_file.exists() else completed.stdout
         output = output.strip()
         if completed.returncode != 0 or not output:
             detail = completed.stderr.strip() or f"exited {completed.returncode} without output"
-            return Result(provider, "failed", model_policy, effort, version, None, detail[-2000:])
-        return Result(provider, "succeeded", model_policy, effort, version, output, None)
+            return Result(provider, "failed", choice, effort, version, None, detail[-2000:])
+        return Result(provider, "succeeded", choice, effort, version, output, None)
 
 
 def effort_label(mapping: EffortMapping) -> str:
@@ -311,7 +333,7 @@ def main() -> int:
         header = (
             f"# {result.provider.title()} {kind}\n\n"
             f"- CLI version: {result.cli_version or 'unknown'}\n"
-            f"- Model policy: {result.model_policy}\n"
+            f"- Model policy: {result.model.policy} ({result.model.source})\n"
             f"- Session effort: {result.effort.requested}\n"
             f"- Applied effort: {effort_label(result.effort)}\n"
             f"- Packet SHA-256: `{packet_hash}`\n"
@@ -335,7 +357,8 @@ def main() -> int:
             {
                 "provider": result.provider,
                 "status": result.status,
-                "modelPolicy": result.model_policy,
+                "modelPolicy": result.model.policy,
+                "modelSource": result.model.source,
                 "effortRequested": result.effort.requested,
                 "effortApplied": result.effort.applied,
                 "effortClamped": result.effort.clamped,
