@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Council"
+  short_description: "Converge every installed model family on one subject, judged by this session"
+  default_prompt: "Use $ai-council to convene a multi-model council on this subject and converge on one canonical answer."
